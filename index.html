@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Cronograma do Fábio</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cronograma">
+    
+    <!-- Fonte Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-solid: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border-color: rgba(226, 232, 240, 0.8);
+            --today-bg: #fefce8;
+            --today-border: #facc15;
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            
+            /* Cores das Tarefas */
+            --color-box: #f59e0b;
+            --color-barba: #10b981;
+            --color-umid: #3b82f6;
+            --color-ar: #ef4444;
+            --color-sec-lavar: #db2777;
+            --color-asp-lavar: #8b5cf6;
+            --color-sec-mao: #06b6d4;
+            --color-asp-pincel: #78350f;
+        }
+
+        /* Variáveis Modo Escuro */
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --card-solid: #1e293b;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --border-color: rgba(51, 65, 85, 0.8);
+            --today-bg: rgba(250, 204, 21, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        
+        html, body { overscroll-behavior-y: none; }
+        body { 
+            background: var(--bg-body); color: var(--text-main); 
+            margin: 0; padding: 15px; padding-top: 25px; 
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        
+        .container { max-width: 1200px; margin: auto; }
+
+        /* Animações Keyframes */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Cabeçalho Premium */
+        header { 
+            padding: 20px; text-align: center; margin-bottom: 20px; position: relative;
+            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px; border: 1px solid var(--border-color); box-shadow: var(--glass-shadow);
+        }
+        
+        .theme-toggle {
+            position: absolute; top: 15px; right: 15px;
+            background: transparent; border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 8px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .theme-toggle:active { transform: scale(0.9); }
+
+        .controles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
+        
+        input, select { 
+            padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border-color); 
+            font-size: 0.95rem; font-weight: 600; outline: none; background: var(--card-solid); 
+            color: var(--text-main); transition: all 0.2s; cursor: pointer;
+        }
+        input:focus, select:focus { border-color: var(--color-umid); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+
+        /* Painel de Status com Glassmorphism e Clicável */
+        .status-panel {
+            background: var(--card-bg); padding: 25px; border-radius: 24px;
+            box-shadow: var(--glass-shadow); margin-bottom: 25px;
+            border-left: 8px solid #64748b; margin-top: 15px;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s ease, transform 0.2s;
+            cursor: pointer; /* Adicionado para indicar que é clicável */
+        }
+        .status-panel:active { transform: scale(0.98); } /* Efeito de afundar ao clique */
+        
+        .status-panel.is-today { 
+            border-left-color: var(--color-barba); 
+            background: rgba(16, 185, 129, 0.05); 
+        }
+        
+        .status-title { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-sub); letter-spacing: 0.05em; margin-bottom: 12px; }
+        .status-content { font-size: 1.2rem; font-weight: 700; line-height: 1.5; }
+
+        /* Efeito de Carregamento */
+        .loader-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 60px 20px; color: var(--text-sub); animation: fadeIn 0.3s ease;
+        }
+        .lucide-spin { animation: spin 1s linear infinite; margin-bottom: 15px; color: var(--color-umid); }
+
+        /* Grid de Meses */
+        .grid-meses { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding-bottom: 40px; }
+        
+        .mes-card { 
+            background: var(--card-solid); border-radius: 24px; padding: 20px; 
+            border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            opacity: 0; /* Inicia invisível para animação */
+            animation: slideUpFade 0.5s ease forwards;
+        }
+        
+        .mes-titulo { font-size: 1.2rem; font-weight: 800; text-transform: capitalize; margin-bottom: 18px; color: var(--text-main); }
+
+        /* Tags Modernas com Ícones */
+        .tag { 
+            font-size: 0.65rem; padding: 4px 8px; border-radius: 8px; color: white; 
+            font-weight: 700; margin-right: 4px; margin-bottom: 4px; 
+            display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; 
+            letter-spacing: 0.03em;
+        }
+        .tag svg { width: 12px; height: 12px; } /* Tamanho do ícone na tag */
+        .tag-box { background: var(--color-box); } .tag-barba { background: var(--color-barba); }
+        .tag-umid { background: var(--color-umid); } .tag-ar { background: var(--color-ar); }
+        .tag-sec-lavar { background: var(--color-sec-lavar); } .tag-asp-lavar { background: var(--color-asp-lavar); }
+        .tag-sec-mao { background: var(--color-sec-mao); } .tag-asp-pincel { background: var(--color-asp-pincel); }
+
+        /* Lista */
+        .item-lista { 
+            display: flex; padding: 14px; border-radius: 16px; margin-bottom: 10px; 
+            background: var(--bg-body); border: 1px solid var(--border-color); 
+            gap: 15px; align-items: center; position: relative; transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .item-lista:active { transform: scale(0.98); }
+        .item-lista.is-today-row { background: var(--today-bg); border: 2px solid var(--today-border); }
+        
+        .badge-hoje { position: absolute; right: 10px; top: -8px; background: var(--today-border); color: #854d0e; font-size: 0.55rem; font-weight: 900; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+        
+        .data-extenso { min-width: 90px; font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; font-weight: 600; }
+        .data-extenso b { display: block; font-size: 1.2rem; color: var(--text-main); font-weight: 900; line-height: 1.1; }
+
+        /* Calendário Moderno */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-dia { 
+            aspect-ratio: 1; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px solid var(--border-color); cursor: pointer; 
+            background: rgba(100, 116, 139, 0.05); color: var(--text-sub);
+            -webkit-tap-highlight-color: transparent; transition: all 0.2s;
+        }
+        .cal-dia:active { transform: scale(0.92); }
+        .cal-dia.has-task { background: var(--card-solid); color: var(--text-main); border-color: var(--text-sub); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .cal-dia.is-today-cal { background: var(--today-bg); border: 2px solid var(--today-border); color: #854d0e; font-weight: 800; }
+        [data-theme="dark"] .cal-dia.has-task { background: #334155; }
+        
+        .dot-container { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; margin-top: 4px; padding: 0 2px; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; }
+
+        /* Modal com Blur */
+        #modal { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
+            z-index: 1000; align-items: center; justify-content: center; padding: 20px; 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content { 
+            background: var(--card-solid); color: var(--text-main); padding: 30px; 
+            border-radius: 32px; max-width: 400px; width: 100%; position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUpFade 0.3s ease;
+        }
+        .close-btn { 
+            position: absolute; top: 20px; right: 20px; cursor: pointer; 
+            color: var(--text-sub); background: var(--bg-body); padding: 8px; 
+            border-radius: 50%; display: flex; transition: transform 0.2s;
+        }
+        .close-btn:active { transform: scale(0.9); }
+
+        @media (max-width: 600px) { .grid-meses { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+            <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <!-- Título atualizado -->
+        <h1 style="font-size: 1.5rem; font-weight: 900; margin:0; padding-top: 5px; letter-spacing: -0.02em;">Cronograma do Fábio</h1>
+        <div class="controles">
+            <input type="number" id="anoInput" value="2026" oninput="handleInputDebounce()">
+            <!-- Opções atualizadas -->
+            <select id="viewSelect" onchange="triggerRenderWithLoading()">
+                <option value="tabela">Modo Lista</option>
+                <option value="calendario">Modo Calendário</option>
+            </select>
+        </div>
+    </header>
+
+    <div id="statusPanel" class="status-panel">
+        <div class="status-title" id="statusLabel"><i data-lucide="calendar-clock" style="width: 16px; height: 16px;"></i> Status</div>
+        <div class="status-content" id="statusTask"></div>
+    </div>
+
+    <div id="calendarioContainer" class="grid-meses"></div>
+</div>
+
+<div id="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="close-btn" onclick="closeModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></div>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    // Inicialização do Lucide Icons e Tema
+    lucide.createIcons();
+
+    if(localStorage.getItem('temaFabio') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+        lucide.createIcons();
+    }
+
+    const MARCO_ZERO = new Date(2026, 1, 13);
+    const HOJE = new Date(); 
+    HOJE.setHours(0,0,0,0);
+
+    const CORES = {
+        'Box': 'var(--color-box)', 'Barba': 'var(--color-barba)', 'Umidificador': 'var(--color-umid)',
+        'Filtro Ar': 'var(--color-ar)', 'Secadora Lavar': 'var(--color-sec-lavar)', 
+        'Aspirador Lavar': 'var(--color-asp-lavar)', 'Secadora Mão': 'var(--color-sec-mao)', 'Aspirador Pincel': 'var(--color-asp-pincel)'
+    };
+
+    const ICONES_TAREFAS = {
+        'Box': 'shower-head', 'Barba': 'scissors', 'Umidificador': 'droplets',
+        'Filtro Ar': 'wind', 'Secadora Lavar': 'shirt', 'Aspirador Lavar': 'fan', 
+        'Secadora Mão': 'shirt', 'Aspirador Pincel': 'fan'
+    };
+
+    function toggleTheme() {
+        const doc = document.documentElement;
+        const currentTheme = doc.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        doc.setAttribute('data-theme', newTheme);
+        
+        const btn = document.getElementById('themeBtn');
+        btn.innerHTML = `<i data-lucide="${newTheme === 'dark' ? 'sun' : 'moon'}" id="themeIcon"></i>`;
+        lucide.createIcons();
+        
+        localStorage.setItem('temaFabio', newTheme);
+    }
+
+    function getTarefa(data) {
+        const d1 = new Date(MARCO_ZERO.getFullYear(), MARCO_ZERO.getMonth(), MARCO_ZERO.getDate());
+        const d2 = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+        const diff = Math.round((d2 - d1) / 86400000);
+        if (diff % 4 !== 0) return null;
+
+        const numEvento = diff / 4;
+        const tipo = (((numEvento % 2) + 2) % 2) === 0 ? "Box" : "Barba";
+        let tags = [{txt: tipo, cl: `tag-${tipo.toLowerCase()}`}];
+
+        const dAnt = new Date(data); dAnt.setDate(data.getDate() - 4);
+        if (data.getDate() >= 13 && (dAnt.getMonth() !== data.getMonth() || dAnt.getDate() < 13)) tags.push({txt: "Filtro Ar", cl: "tag-ar"});
+        if (((numEvento - 3) % 4 + 4) % 4 === 0) tags.push({txt: "Umidificador", cl: "tag-umid"});
+
+        if (tipo === "Barba") {
+            const nB = Math.floor(numEvento / 2) + 1;
+            const cB = ((nB % 4) + 4) % 4;
+            if (cB === 0) tags.push({txt: "Secadora Lavar", cl: "tag-sec-lavar"}, {txt: "Aspirador Lavar", cl: "tag-asp-lavar"});
+            else if (cB === 2) tags.push({txt: "Secadora Lavar", cl: "tag-sec-lavar"}, {txt: "Aspirador Pincel", cl: "tag-asp-pincel"});
+            else tags.push({txt: "Secadora Mão", cl: "tag-sec-mao"}, {txt: "Aspirador Pincel", cl: "tag-asp-pincel"});
+        }
+        return { tipo, tags, dFmt: data.toLocaleDateString('pt-br', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'}) };
+    }
+
+    function gerarHTMLTag(t) {
+        return `<span class="tag ${t.cl}"><i data-lucide="${ICONES_TAREFAS[t.txt]}"></i> ${t.txt}</span>`;
+    }
+
+    function atualizarStatus() {
+        const infoHoje = getTarefa(HOJE);
+        const panel = document.getElementById('statusPanel');
+        const label = document.getElementById('statusLabel');
+        const content = document.getElementById('statusTask');
+
+        if (infoHoje) {
+            panel.classList.add('is-today');
+            label.innerHTML = `<i data-lucide="sparkles" style="width: 16px; height: 16px; color: var(--color-box);"></i> Hoje (${infoHoje.dFmt}):`;
+            content.innerHTML = infoHoje.tags.map(t => gerarHTMLTag(t)).join(' ');
+            
+            // Atribui o clique chamando a função do modal com a data de HOJE
+            panel.setAttribute('onclick', `openModal(${HOJE.getDate()}, ${HOJE.getMonth()}, ${HOJE.getFullYear()})`);
+        } else {
+            panel.classList.remove('is-today');
+            let busca = new Date(HOJE);
+            for(let i=1; i<=4; i++) {
+                busca.setDate(busca.getDate() + 1);
+                let prox = getTarefa(busca);
+                if(prox) {
+                    label.innerHTML = `<i data-lucide="fast-forward" style="width: 16px; height: 16px;"></i> Próximas (${prox.dFmt}):`;
+                    content.innerHTML = prox.tags.map(t => gerarHTMLTag(t)).join(' ');
+                    
+                    // Atribui o clique chamando a função do modal com a data da PRÓXIMA tarefa
+                    panel.setAttribute('onclick', `openModal(${busca.getDate()}, ${busca.getMonth()}, ${busca.getFullYear()})`);
+                    break;
+                }
+            }
+        }
+    }
+
+    let typingTimer;
+    function handleInputDebounce() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(triggerRenderWithLoading, 500);
+    }
+
+    function triggerRenderWithLoading() {
+        const container = document.getElementById('calendarioContainer');
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1;">
+                <div class="loader-container">
+                    <i data-lucide="loader-2" class="lucide-spin" style="width: 40px; height: 40px;"></i>
+                    <div style="font-weight: 600;">Calculando cronograma...</div>
+                </div>
+            </div>`;
+        lucide.createIcons();
+        setTimeout(render, 300);
+    }
+
+    function render() {
+        const inputAno = document.getElementById('anoInput');
+        if(!inputAno.value) inputAno.value = HOJE.getFullYear();
+        const ano = parseInt(inputAno.value);
+        
+        const view = document.getElementById('viewSelect').value;
+        const container = document.getElementById('calendarioContainer');
+        if(!ano) return;
+        
+        container.innerHTML = '';
+        atualizarStatus();
+
+        const fragment = document.createDocumentFragment();
+
+        for(let m=0; m<12; m++) {
+            const card = document.createElement('div');
+            card.className = 'mes-card';
+            card.style.animationDelay = `${m * 0.05}s`; 
+            
+            const nomeMes = new Date(ano, m, 1).toLocaleString('pt-br', {month:'long'});
+            let html = `<div class="mes-titulo">${nomeMes}</div>`;
+
+            if(view === 'tabela') {
+                for(let d=1; d<=new Date(ano, m+1, 0).getDate(); d++) {
+                    const dataIter = new Date(ano, m, d);
+                    const info = getTarefa(dataIter);
+                    if(info) {
+                        const isToday = dataIter.getTime() === HOJE.getTime();
+                        html += `<div class="item-lista ${isToday ? 'is-today-row' : ''}" onclick="openModal(${d},${m},${ano})">
+                            ${isToday ? '<span class="badge-hoje">Hoje</span>' : ''}
+                            <div class="data-extenso"><b>${d}</b> ${dataIter.toLocaleString('pt-br', {weekday:'short'}).replace('.','')}</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:4px;">${info.tags.map(t => gerarHTMLTag(t)).join('')}</div>
+                        </div>`;
+                    }
+                }
+            } else {
+                html += `<div class="cal-grid">`;
+                ['D','S','T','Q','Q','S','S'].forEach(d => html += `<div style="font-size:0.65rem; text-align:center; color:var(--text-sub); font-weight:800; padding-bottom:8px">${d}</div>`);
+                const prim = new Date(ano, m, 1).getDay();
+                for(let i=0; i<prim; i++) html += `<div></div>`;
+                for(let d=1; d<=new Date(ano, m+1, 0).getDate(); d++) {
+                    const dataIter = new Date(ano, m, d);
+                    const info = getTarefa(dataIter);
+                    const isToday = dataIter.getTime() === HOJE.getTime();
+                    html += `<div class="cal-dia ${info ? 'has-task' : ''} ${isToday ? 'is-today-cal' : ''}" onclick="openModal(${d},${m},${ano})">
+                        ${d}
+                        <div class="dot-container">${info ? info.tags.map(t => `<div class="dot" style="background:${CORES[t.txt]}"></div>`).join('') : ''}</div>
+                    </div>`;
+                }
+                html += `</div>`;
+            }
+            card.innerHTML = html; 
+            fragment.appendChild(card);
+        }
+        
+        container.appendChild(fragment);
+        lucide.createIcons();
+    }
+
+    function openModal(d,m,a) {
+        const info = getTarefa(new Date(a,m,d));
+        if(!info) return;
+        document.getElementById('modalBody').innerHTML = `
+            <h3 style="margin:0 0 20px 0; font-size:1.3rem; text-transform:capitalize; font-weight: 800;">
+                ${info.dFmt}
+            </h3>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${info.tags.map(t => `<span class="tag ${t.cl}" style="font-size:0.8rem; padding:8px 12px; border-radius: 10px;"><i data-lucide="${ICONES_TAREFAS[t.txt]}"></i> ${t.txt}</span>`).join('')}
+            </div>
+        `;
+        document.getElementById('modal').style.display = 'flex';
+        lucide.createIcons();
+    }
+    
+    function closeModal() { 
+        document.getElementById('modal').style.display = 'none'; 
+    }
+    
+    window.onload = render;
+</script>
+</body>
+</html>
